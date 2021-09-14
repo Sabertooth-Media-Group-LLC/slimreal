@@ -1,3 +1,4 @@
+@if (@CodeSection == @Batch) @then
 @echo off
 
 set MYPATH=%~dp0
@@ -52,13 +53,13 @@ curl --progress-bar -L "https://aka.ms/vs/16/release/vs_buildtools.exe" --output
 	--add Microsoft.NetCore.Component.SDK
 
 @rem cleanups
-rmdir /S /Q \\?\%TEMP%
-mkdir %TEMP%
-
+rmdir /S /Q \\?\%TEMP% 2>&1 1>NUL
+mkdir %TEMP% 2>&1 1>NUL
+start "Chocolatey Cleanup" /wait cmd.exe /c "choco-cleaner"
 if exist %APPDATA%\NuGet rmdir /s /q %APPDATA%\NuGet
-if not exist %MYPATH%\ue4_%GIT_BRANCH% mkdir %MYPATH%\ue4_%GIT_BRANCH%
 
-@rem clone repository 
+@rem clone repository
+if not exist %MYPATH%\ue4_%GIT_BRANCH% mkdir %MYPATH%\ue4_%GIT_BRANCH%
 git clone --progress --depth=1 -b %GIT_BRANCH% "%GIT_REPO%" %MYPATH%\ue4_%GIT_BRANCH%
 
 @rem apply patches
@@ -67,7 +68,9 @@ python %MYPATH%\patches\patch-broken-releases.py %MYPATH%\ue4_%GIT_BRANCH%
 
 pushd %MYPATH%\ue4_%GIT_BRANCH%
 call %MYPATH%\ue4_%GIT_BRANCH%\Setup.bat -no-cache
-start /wait %MYPATH%\ue4_%GIT_BRANCH%\Engine\Binaries\Win64\UnrealVersionSelector-Win64-Shipping.exe /register
+start %MYPATH%\ue4_%GIT_BRANCH%\Engine\Binaries\Win64\UnrealVersionSelector-Win64-Shipping.exe /register
+powershell -c "Start-Sleep -s 2"
+powershell -c "$wshell = New-Object -ComObject wscript.shell; $wshell.SendKeys('^{ENTER}')"
 rmdir /s /q %MYPATH%\ue4_%GIT_BRANCH%\Engine\Platforms\XXX
 popd && popd
 python %MYPATH%\patches\patch-ubt.py %MYPATH%\ue4_%GIT_BRANCH%\Engine\Source\Programs\UnrealBuildTool
@@ -80,4 +83,5 @@ call %MYPATH%\ue4_%GIT_BRANCH%\Engine\Build\BatchFiles\Build.bat ShaderCompileWo
 call %MYPATH%\ue4_%GIT_BRANCH%\Engine\Build\BatchFiles\Build.bat UnrealPak Win64 Development -WaitMutex
 popd
 
-:EOF
+goto :EOF
+@end

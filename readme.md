@@ -11,7 +11,7 @@ Pros
 * No full Visual Studio 2019 installation is required, saving you more disk space.  A slim install of msbuild / Visual Studio Tools with only what's needed is used.
 * The installation is largely unattended, with the exception of logging into GitHub, and ticking "Yes" to register the new build in your registry.  Per Adam's request on his Wiki, github-authentication-helper.bat reliant code has been removed in this iteration.
 * Nessecary DirectX / Vulkan runtime DLLs are copied automatically from official Microsoft cabinets.
-* The repository you should seek out for a quick and dirty vanilla build of the Unreal Engine that works on Windows 10.
+* The repository you should seek out for a quick and dirty vanilla build of the Unreal Engine that works on Windows 10 20H2 or 21H1.
 
 Cons
 ----
@@ -20,3 +20,4 @@ Cons
 * Can't compile on Windows Server thanks to additional missing DLLs
 * Has to use chocolatey, can make a mess of the host's PATH
 * Lazy, no sanity checks
+
