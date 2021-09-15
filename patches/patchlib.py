@@ -13,6 +13,7 @@ class plib:
     packageVersion = "1.0.0"
     
     # strings - allows for translation to other languages in verbose output at your leasure.
+    # TODO: put these in an enum class along with output defs below.
     __SUCCESS_SEARCH = "Succeeded for search string:"
     __SUCCESS_PATCH = "PATCHED SUCCESSFULLY"
     __FAIL_SEARCH = "Failed for search string:"
@@ -41,10 +42,10 @@ class plib:
     # use me for your pleasure.
     #
     # patchlib.addInstruction({'filename': os.path.join(patchlib.packageRoot, "rotflscssbllqqrrbrrbel.ext" ), 'searchString': """ """, 'replaceString': """ """, 'versionMatch': ">=4.0.0", 'patchConditionString': NaN})
-    def addInstruction(self, matchInstruction):
+    def addInstruction(self, data):
         __patchData.append(data, ignore_index=True)
     
-   # TODO: no removeInstruction?  probably not needed right now.
+   # TODO: no removeInstruction?  probably not needed right now.  when a patchlib UI is implimented, yes.
    def removeInstruction(self, matchInstruction):
         # Not implimented.
         pass
@@ -53,8 +54,8 @@ class plib:
     def getUnrealEnginePackageVersion(self):
         return "%(MajorVersion)s.%(MinorVersion).%(PatchVersion)s" % **(json.loads(readFile(os.path.join(self.packageRoot, "Engine", "Build", "Build.version"))))
         
-    # aaand this commit makes it more generic.  because why the hell not?  data-driven patch management doesn't
-    # exist so, i just created it, enjoy it, python community.
+    # compare version using comparitor syntax, can accept any versioning shcema as long as its formatted
+    # major left to right minor.  ex.   "4.1.2 >= 4.1.0" returns True, "2.1.5.8.102 < 2.1.5.9.104" returns False
     def __compareVersion(self, versionComparitor):
         versions = list()
         # syntactic map
@@ -79,6 +80,7 @@ class plib:
                return True
         return False
 
+    # TODO: make these output functions more pythonic (all-in-one).
     def __outputSkipped(self, fileName, fileResult):
         if self.__verboseOutput == True:
             print("{} {}:\n\n{}".format(self.__SKIP_PATCH, fileName, fileResult), file=sys.stderr)
@@ -103,7 +105,7 @@ class plib:
         else:
             print("{} {}".format(self.__SUCCESS_PATCH, fileName), file=sys.stderr)
 
-    # welp.
+    # DataFrame interpretor?  I am not sure what we call this, but that's pretty close to what this is.
     def patchFiles(self):
         # perform query, filter by version match predicate.
         patchFileGrp = self.__patchData.groupby("filename", sort=False)["searchString", "replaceString", "versionMatch", "patchConditionString", "patchConditionNot"].filter(lambda x: (self.__compareVersion(self.packageVersion.join(x["versionMatch"]))).any())
@@ -136,7 +138,7 @@ class plib:
                     else:
                         result += "{}\n\n{}\n".format(self.__SKIP_SEARCH, row["searchString"])
                 else:
-                    result += "{}\n\n{}\n\n\n-----\n\n{}\n\n{}".format(self.__SKIP_SEARCH, row["searchString"], self.__PARTIAL_SEARCH, row["patchConditionString"])
+                    result += "{}\n\n{}\n\n\n-----\n\n{}\n\n{}\n".format(self.__SKIP_SEARCH, row["searchString"], self.__PARTIAL_SEARCH, row["patchConditionString"])
             
             # do operations
             if self.__SUCCESS_SEARCH in result and not self.__SKIP_SEARCH in result and not self.__FAIL_SEARCH in result:
@@ -150,5 +152,4 @@ class plib:
                 self.__writeFile(self, fname, patched)
                 self.__outputPartial(self, fname, result)
 
-            
 patchlib = plib(False)
